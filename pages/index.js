@@ -56,11 +56,18 @@ class Home extends Component {
       "title": "Red Window",
       "level": 2,
       "children": [],
-      "parent_id": 12}]}
+      "parent_id": 12}]},
+      error: null, errorInfo: null
     }
   }
   componentDidMount() {
     this.getList();
+  }
+  componentDidCatch(error, errorInfo) {
+    this.setState({
+      error: error,
+      errorInfo: errorInfo
+    })
   }
   getList() {
     fetch('https://api.github.com/repositories?since=364').then(response => response.json())
@@ -74,8 +81,17 @@ class Home extends Component {
   handleChange = (event) => {
     this.setState({dataInput: event.target.value});
   }
+  IsValidJSONString(str) {
+    try {
+        JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
   changeObject = () => {
-    const { dataInput } = this.state;
+    const { dataInput, errorInfo } = this.state;
+    if(this.IsValidJSONString(dataInput)){
     var a = JSON.parse(dataInput);
     let final = [];
     for (let key in a) {
@@ -88,6 +104,9 @@ class Home extends Component {
       }
     }
   this.listToTree(final)
+    }else{
+      alert('please input correct json format')
+    }
   }
 
   listToTree(list) {
@@ -149,7 +168,7 @@ class Home extends Component {
         </Form>
           </Col>
         <Col>
-            <pre>{
+            <pre className="pre-size">{
               JSON.stringify(newJson, 0, 4)
             }</pre></Col>
         </Row>
@@ -171,10 +190,15 @@ class Home extends Component {
         padding-top: 80px;
         line-height: 1.15;
         font-size: 48px;
+        margin-bottom: 15px;
       }
       .title,
       .description {
         text-align: center;
+      }
+      .pre-size {
+        height: 458px;
+        margin-top: 45px;
       }
       .row {
         max-width: 880px;
