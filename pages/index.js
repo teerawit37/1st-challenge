@@ -160,7 +160,7 @@ class Home extends Component {
       <h1 className="title">Welcome to 2nd Challenge!</h1>
         <Col>
         <Form>
-        <Button variant="primary" onClick={() => this.changeObject()}>convert</Button>
+        <Button variant="primary" onClick={() => this.changeObject()}>convert now</Button>
          <Form.Group controlId="input-json">
             <Form.Label>input json</Form.Label>
             <Form.Control as="textarea" value={dataInput} rows="30" onChange={(e) => this.handleChange(e)}/>
@@ -169,7 +169,8 @@ class Home extends Component {
           </Col>
         <Col>
             <pre className="pre-size">{
-              JSON.stringify(newJson, 0, 4)
+              newJson.length > 0 ?
+              JSON.stringify(newJson, 0, 4) : ''
             }</pre></Col>
         </Row>
             
