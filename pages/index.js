@@ -1,8 +1,7 @@
 import React, { Component } from 'react'
 import Head from 'next/head'
 import Nav from '../components/nav'
-import _ from 'lodash';
-import TextareaAutosize from '@material-ui/core/TextareaAutosize';
+import { Container, Button, Row, Col, Form } from 'react-bootstrap';
 import { DataTable } from 'react-data-components';
 
 class Home extends Component {
@@ -10,14 +9,15 @@ class Home extends Component {
     super(props);
     this.state = {
       data: [],
+      dataInput: '',
       newJson: [],
       column: [
         { title: 'id', prop: 'id'  },
         { title: 'name', prop: 'name' },
-        { title: 'pulls_url', prop: 'pulls_url' },
+        { title: 'node_id', prop: 'node_id' },
         { title: 'full_name', prop: 'full_name' }
       ],
-      a: 
+      testCase: 
       {
       "0":
       [{"id": 10,
@@ -61,7 +61,6 @@ class Home extends Component {
   }
   componentDidMount() {
     this.getList();
-    this.changeObject();
   }
   getList() {
     fetch('https://api.github.com/repositories?since=364').then(response => response.json())
@@ -72,82 +71,99 @@ class Home extends Component {
      )
     })
   }
-  changeObject() {
-    const { a } = this.state;
-    var final = [];
-    for (var key in a) {
+  handleChange = (event) => {
+    this.setState({dataInput: event.target.value});
+  }
+  changeObject = () => {
+    const { dataInput } = this.state;
+    var a = JSON.parse(dataInput);
+    let final = [];
+    for (let key in a) {
       if (!a.hasOwnProperty(key)) continue;
-      var obj = a[key];
-        for (var prop in obj) {
+      let obj = a[key];
+        for (let prop in obj) {
           if (!obj.hasOwnProperty(prop)) continue;
           final.push(obj[prop])
            console.log(key +  " = " + obj[prop].level)
       }
     }
-  console.log('final array: ', final)
-  
-  this.convertJson(final);
+  this.listToTree(final)
   }
 
-  convertJson(array){
-  var data = [];
-  var pointer = [];
-  array.forEach(element => {
-    if(element.parent_id == null){
-      data[element['id']] = element;
-      pointer[element['id']] = data[element['id']]; 
-    }else{
-      pointer[element['parent_id']]['children'][element['id']] = element;
-      pointer[element['id']] = pointer[element['parent_id']]['children'][element['id']];
-    }
-  });
-  var cleanArray = data.filter(function () { return true });
-  console.log('final json: ', cleanArray)
-  this.setState({newJson: cleanArray});
-  }
-
-  removeEmptyOrNull = (obj) => {
-    Object.keys(obj).forEach(k =>
-      (obj[k] && typeof obj[k] === 'object') && removeEmptyOrNull(obj[k]) ||
-      (!obj[k] && obj[k] !== undefined) && delete obj[k]
-    );
-    return obj;
+  listToTree(list) {
+    let map = {}, node, roots = [];
+    list.forEach((element, index) => {
+      map[element.id] = index; 
+      element.children = [];
+    })
+    list.forEach(element => {
+      node = element;
+      if(node.parent_id !== null){
+        list[map[node.parent_id]].children.push(node);
+      }else{
+        roots.push(node);
+      }
+    })
+    this.setState({newJson: roots});
   }
 
 
   render(){
-  const { data, column, newJson } = this.state;
+  const { data, column, newJson, dataInput } = this.state;
   return (
   <div>
     <Head>
       <title>Home</title>
       <link rel="icon" href="/favicon.ico" />
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"/>
+      <link
+  rel="stylesheet"
+  href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+  integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+  crossorigin="anonymous"
+/>
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"/>
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/carlosrocha/react-data-components@master/css/table-twbs.css"/>
     </Head>
 
     <Nav />
-
-    <div className="hero">
+    <Container>
       <h1 className="title">Welcome to 1st Challenge!</h1>
+      <div className="padding-hero">
       <DataTable
       keys="name"
       columns={column}
       initialData={data}
       initialPageLength={10}
       />
-      <pre>{
-              JSON.stringify(newJson)
-            }</pre>
-
       </div>
- 
+      <Row>
+      <h1 className="title">Welcome to 2nd Challenge!</h1>
+        <Col>
+        <Form>
+        <Button variant="primary" onClick={() => this.changeObject()}>convert</Button>
+         <Form.Group controlId="input-json">
+            <Form.Label>input json</Form.Label>
+            <Form.Control as="textarea" value={dataInput} rows="30" onChange={(e) => this.handleChange(e)}/>
+         </Form.Group>
+        </Form>
+          </Col>
+        <Col>
+            <pre>{
+              JSON.stringify(newJson, 0, 4)
+            }</pre></Col>
+        </Row>
+            
+      </Container>
    
     <style jsx>{`
       .hero {
         width: 100%;
         color: #333;
+      }
+      .full-width {
+        width: 100%;
+        height: 100%;
       }
       .title {
         margin: 0;
